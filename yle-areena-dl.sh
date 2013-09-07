@@ -29,12 +29,17 @@ cat << EOF > $LAUNCH_CTL_FILE
         <string>$SCRIPT</string>
     </array>
     <key>StartInterval</key>
-    <integer>10</integer>
+    <integer>3600</integer>
 </dict>
 </plist>
 EOF
 
 launchctl load $LAUNCH_CTL_FILE
+touch $DOWNLOADED_FILE
+
+echo "$LOG_PREFIX $SHOW - new episodes will be searched and downloaded automatically every hour"
+
+return
 fi
 
 urls=$(curl --silent $URL | grep -o '<link>.*</link>' | sed 's|<link>\(.*\)</link>|\1|g' | grep '[0-9]$')
