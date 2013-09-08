@@ -11,11 +11,8 @@
 2. Edit the newly created file and replace _BASEDIR_ variable with a directory where the episodes should be downloaded.
 3. Edit the SHOW variable and come up with a unique name for your series. All new episodes will be downloaded under the _BASEDIR/SHOW_ directory
 4. Replace the URL variable with a RSS-feed Url for the series you want to follow. The url can be found from http://areena.yle.fi/ and searching for a show you want to follow. After searching copy the RSS-link.
-5. Run the newly created script eg. _./pikku_kakkonen.sh_. This will create a new hourly running task which will download any new episodes to the previously defined directory
+5. Run the newly created script eg. _./pikku_kakkonen.sh -i_. This will create a new hourly running task which will download any new episodes to the previously defined directory
 
 #### Uninstalling a downloader
 
-1. From the terminal run `launchctl remove areena.[SHOW]`
-2. From the terminal run `rm ~/Library/LaunchAgents/areena.[SHOW].plist`
-
-replace [SHOW] with the show name you came up with in step 3. of the Usage section 
+1. Run _./pikku_kakkonen.sh -u_ 
