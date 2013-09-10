@@ -70,9 +70,9 @@ function run {
 		touch "$DOWNLOADED_FILE"
 	fi
 
-	for show in $(ls $SHOWS_DIR)
+	for show in $(ls $SHOWS_DIR/*.sh)
 	do
-		source "$SHOWS_DIR/$show"
+		source "$show"
 		
 		if [ ! -f "$BASE_DIR" ]; then
 			mkdir -p "$BASE_DIR/$SHOW"
@@ -82,9 +82,7 @@ function run {
 		urls=$(curl --silent $URL | grep -o '<link>.*</link>' | sed 's|<link>\(.*\)</link>|\1|g' | grep '[0-9]$')
 		for url in $urls
 		do
-			if grep --quiet $url $DOWNLOADED_FILE; then
-		  		echo "$url already downloaded"
-			else
+			if ! grep --quiet $url $DOWNLOADED_FILE; then
 		  		echo "$(date): downloading $url" >> "$LOG_FILE"
 		  		$YLE_DL/yle-dl --rtmpdump $YLE_DL/rtmpdump --destdir "$BASE_DIR/$SHOW" $url
 		  		if [ $? -eq 0 ]; then
