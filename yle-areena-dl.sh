@@ -107,7 +107,7 @@ function usage {
 	where
 	-i              installs the periodically running new episode checker
 	-u              uninstalls the episode checker
-	-a rss_url      adds a new show using the shows rss feed url rss_url
+	-a rss_url      adds a new show using the show's rss feed url (rss url can be found from the show's page in areena.yle.fi)
 	-h              prints this message
 
 	ENDOFMESSAGE
