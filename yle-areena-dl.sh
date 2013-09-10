@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE_DIR=~/Desktop/Areena
+downloads_root_dir=~/Desktop/Areena
 
 #################################################################################
 #
@@ -8,97 +8,99 @@ BASE_DIR=~/Desktop/Areena
 #
 #################################################################################
 
-YLE_DL=/Applications/Areena-lataaja.app/Contents/Resources/yle-dl
-SCRIPT_DIR=$( cd $(dirname $0) ; pwd -P)
-SCRIPT_FILE=$SCRIPT_DIR/$(basename $0)
-LAUNCH_CTL=com.areena-dl
-LAUNCH_CTL_FILE=~/Library/LaunchAgents/$LAUNCH_CTL.plist
-SHOWS_DIR=$SCRIPT_DIR/shows
-DOWNLOADED_FILE=$BASE_DIR/downloaded.txt
-LOG_FILE=$BASE_DIR/areena-dl.log
+script_dir=$( cd $(dirname $0) ; pwd -P)
+script_file=$script_dir/$(basename $0)
+bin_dir=$script_dir/bin
+launch_ctl=com.areena-dl
+launch_ctl_file=~/Library/LaunchAgents/$launch_ctl.plist
+shows_dir=$script_dir/shows
+downloaded_file=$script_dir/run/downloaded.txt
+log_file=$script_dir/logs/areena-dl.log
 
 function install {
-	if [ ! -f $LAUNCH_CTL_FILE ]; then
-		cat <<- EOF > $LAUNCH_CTL_FILE
+	if [ ! -f $launch_ctl_file ]; then
+		cat <<- EOF > $launch_ctl_file
 		<?xml version="1.0" encoding="UTF-8"?>
 		<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 		<plist version="1.0">
 		<dict>
 		    <key>Label</key>
-		    <string>$LAUNCH_CTL</string>
+		    <string>$launch_ctl</string>
 		    <key>ProgramArguments</key>
 		    <array>
-		        <string>$SCRIPT_FILE</string>
+		        <string>$script_file</string>
 		    </array>
 		    <key>StartInterval</key>
 		    <integer>3600</integer>
 		</dict>
 		</plist>
 		EOF
-		echo "created $LAUNCH_CTL_FILE"
-		launchctl load $LAUNCH_CTL_FILE
+		echo "created $launch_ctl_file"
+		launchctl load $launch_ctl_file
 		echo "new episodes will be searched and downloaded automatically every hour"
 	else
-		echo "$LAUNCH_CTL_FILE already exists."
+		echo "$launch_ctl_file already exists."
 	fi
 }
 
 function uninstall {
-	launchctl remove $LAUNCH_CTL
-	rm $LAUNCH_CTL_FILE
+	launchctl remove $launch_ctl
+	rm $launch_ctl_file
 }
 
 function addshow {
 	title=$(curl --silent "$1" | grep -m 1 -o 'CDATA\[.*\]' | sed 's/.*\[\(.*\)\]\]/\1/')
 	script="$(sed 's/ /_/' <<< $title).sh"
 
-	cat <<- EOF > "$SHOWS_DIR/$script"
+	cat <<- EOF > "$shows_dir/$script"
 		#!/bin/bash
 
 		SHOW="$title"
 		URL="$1"
 	EOF
-	chmod u+x "$SHOWS_DIR/$script"
+	chmod u+x "$shows_dir/$script"
 }
 
 function run {
-	if [ ! -f "$BASE_DIR" ]; then
-		mkdir -p "$BASE_DIR"
+
+	if [ ! -f "$script_dir/logs" ]; then
+		mkdir -p "$script_dir/logs"
+		touch $downloaded_file
 	fi
 
-	if [ ! -f "$DOWNLOADED_FILE" ]; then
-		touch "$DOWNLOADED_FILE"
+	if [ ! -f "$script_dir/run" ]; then
+		mkdir -p "$script_dir/run"
 	fi
 
-	for show in $(ls $SHOWS_DIR/*.sh)
+	for show in $(ls $shows_dir/*.sh)
 	do
 		source "$show"
 		
-		if [ ! -f "$BASE_DIR" ]; then
-			mkdir -p "$BASE_DIR/$SHOW"
+		if [ ! -f "$downloads_root_dir" ]; then
+			mkdir -p "$downloads_root_dir/$SHOW"
 		fi
 
-		echo "$(date): checking for new episodes of $SHOW" >> "$LOG_FILE"
+		echo "$(date): checking for new episodes of $SHOW" >> "$log_file"
 		urls=$(curl --silent $URL | grep -o '<link>.*</link>' | sed 's|<link>\(.*\)</link>|\1|g' | grep '[0-9]$')
 		for url in $urls
 		do
-			if ! grep --quiet $url $DOWNLOADED_FILE; then
-		  		echo "$(date): downloading $url" >> "$LOG_FILE"
-		  		$YLE_DL/yle-dl --rtmpdump $YLE_DL/rtmpdump --destdir "$BASE_DIR/$SHOW" $url
+			if ! grep --quiet $url $downloaded_file; then
+		  		echo "$(date): downloading $url" >> "$log_file"
+		  		$bin_dir/yle-dl --rtmpdump $bin_dir/rtmpdump --quiet --destdir "$downloads_root_dir/$SHOW" $url
 		  		if [ $? -eq 0 ]; then
-	    			echo $url >> "$DOWNLOADED_FILE"
+	    			echo $url >> "$downloaded_file"
 				else
-	    			echo "$(date): $url download failed" >> "$LOG_FILE"
+	    			echo "$(date): $url download failed" >> "$log_file"
 				fi
 			fi
 		done
 	done
 
-	echo "$(date): done." >> "$LOG_FILE"
+	echo "$(date): done." >> "$log_file"
 }
 
 function usage {
-	cat <<-ENDOFMESSAGE
+	cat <<- ENDOFMESSAGE
 
 	Usage: $(basename "$0") [-i|-u|-h|-a rss_url]
 

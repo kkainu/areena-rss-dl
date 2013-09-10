@@ -1,2 +1,4 @@
 shows/*.sh
 .DS_Store
+logs
+run
