@@ -1,4 +1,4 @@
-### Areena-RSS-dl
+### areena-rss-dl
 
 #### Usage
 	git clone git@github.com:kkainu/osx-areena-dl.git
