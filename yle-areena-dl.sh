@@ -72,7 +72,7 @@ function run {
 		mkdir -p "$script_dir/run"
 	fi
 
-	for show in $(ls $shows_dir/*.sh)
+	for show in $shows_dir/*.sh
 	do
 		source "$show"
 		
